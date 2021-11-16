@@ -10,6 +10,9 @@ npm install --save http-cache-agent
 ```javascript
 const CacheAgent = require('./http-cache-agent');
 const https = require('https');
+
+// Change path (default is temp)
+CacheAgent.path = '/usr/local/tmp';
 ```
 
 ###### Get content
