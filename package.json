@@ -1,0 +1,24 @@
+{
+  "name": "http-cache-agent",
+  "version": "1.0.0",
+  "description": "HTTP(S) Cache Agent. Compatible with http-proxy-agent and https-proxy-agent",
+  "main": "http-cache-agent.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ar-comlog/http-cache-agent.git"
+  },
+  "keywords": [
+    "http",
+    "cache"
+  ],
+  "author": "COMLOG GmbH (Anatolij Rau)",
+  "license": "SEE LICENSE IN LICENSE file",
+  "bugs": {
+    "url": "https://github.com/ar-comlog/http-cache-agent/issues"
+  },
+  "homepage": "https://github.com/ar-comlog/http-cache-agent#readme",
+  "dependencies": {}
+}
