@@ -1,5 +1,5 @@
 # http-cache-agent
-File based HTTP + HTTPS Cache agent. Compatible with http-proxy-agent.
+File based HTTP + HTTPS Cache agent. Compatible with http-proxy-agent and proxy-agent.
 
 ###Installation
 ```cmd
@@ -90,6 +90,35 @@ req.on('error', error => {
 
 req.end();
 ```
+
+###### With proxy-agent
+```javascript
+var ProxyAgent = require('proxy-agent');
+var pa = new ProxyAgent('http://localhost:8118');
+
+var ca = CacheAgent.https(null, pa);
+var req = https.request(
+   'https://www.google.de/favicon.ico',
+   {agent: ca},
+   function (res) {
+      var data = '';
+      res.on('data', function (chunk) {
+         data += chunk
+      });
+
+      res.on('end', function () {
+         console.info(data);
+      });
+   }
+)
+req.on('error', error => {
+   console.error(error)
+});
+
+req.end();
+/**/
+```
+
 
 ###### Get request 
 ```javascript

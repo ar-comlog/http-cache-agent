@@ -46,7 +46,34 @@ req.end();
 /**/
 
 // Proxy Agent
-/*
+
+var ProxyAgent = require('proxy-agent');
+var pa = new ProxyAgent('http://localhost:8118');
+
+var ca = CacheAgent.https(null, pa);
+var req = https.request(
+	'https://www.google.de/favicon.ico',
+	{agent: ca},
+	function (res) {
+		var data = '';
+		res.on('data', function (chunk) {
+			data += chunk
+		});
+
+		res.on('end', function () {
+			console.info(data);
+		});
+	}
+)
+req.on('error', error => {
+	console.error(error)
+});
+
+req.end();
+/**/
+
+// HTTP Proxy Agent
+/**
 var ProxyAgent = require('https-proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
 
@@ -72,6 +99,7 @@ req.on('error', error => {
 req.end();
 /**/
 
+
 // Reset + cleanup
 /*
 CacheAgent.reset(function (err) {
@@ -80,7 +108,7 @@ CacheAgent.reset(function (err) {
 	});
 });
 /**/
-
+/*
 var ca = CacheAgent.https();
 var req = https.get(
 	'https://www.google.de/favicon.ico',
@@ -105,3 +133,4 @@ var req = https.get(
 req.on('error', function(e) {
 	console.log('ERROR: ' + e.message);
 });
+/**/

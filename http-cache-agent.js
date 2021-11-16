@@ -5,30 +5,43 @@ const
 	_crypto = require('crypto'),
 	_net = require('net'),
 	_http = require("http"),
-	_https = require("https")
+	_https = require("https"),
+	_tls = require('tls')
 ;
 
-function CacheSocket(file, cb) {
-	var stream = _fs.createReadStream(file);
+function getKey(options) {
+	if (!options.href) {
+		options.href = '';
 
-	var srv = _net.createServer(function(sock) {
-		sock.on('data', function (chunk) {
-			stream.pipe(sock);
-			stream.on('end', function () {
-				sock.end();
-				srv.close();
-			});
-		});
-	});
+		if (!options.protocol) {
+			if (options.port === 443) options.protocol = 'https:';
+			else options.protocol = 'http:';
+		}
+		options.href += options.protocol+'//';
+		if (options.auth) options.href += options.auth+'@';
+		options.href += options.host;
+		if (options.port) {
+			if (
+				(options.href.indexOf('http:') > -1 && options.port !== 80) ||
+				(options.href.indexOf('https:') > -1 && options.port !== 443) ||
+				(options.href.indexOf('http:') < 0 && options.href.indexOf('https:') < 0)
+			) {
+				options.href += ':'+options.port;
+			}
+		}
+		options.href += options.pathname || options.path || '/';
+		if (options.query) options.href += '?'+options.query;
+		else if (options.search) options.href += options.search;
+	}
+	var data = [options.href];
+	if (options.method) data.push(options.method);
+	if (options.protocol) data.push(options.protocol);
+	if (options.headers) data.push(JSON.stringify(options.headers));
 
-	var socket = new _net.Socket();
+	var md5sum = _crypto.createHash('md5');
+	md5sum.update(data.join('|'));
 
-	srv.listen(0, function() {
-		socket.connect({host: '127.0.0.1', port: srv.address().port});
-		cb(socket);
-	});
-
-	return socket;
+	return md5sum.digest('hex');
 }
 
 function readCacheHeaderSync(file) {
@@ -77,6 +90,88 @@ function parseHead(head) {
 	return res;
 }
 
+function createCache(socket, file) {
+	var cstream;
+	var head = Buffer.alloc(0);
+	var spos = -1;
+
+	socket.on('data', function (data) {
+		if (head !== null) {
+			head = Buffer.concat([head, data], head.length+data.length);
+			if ((spos = head.indexOf("\r\n\r\n")) > -1) {
+				var body = head.slice(spos+4, head.length);
+				head = head.slice(0, spos+4);
+				var HeadObj = parseHead(head.toString());
+
+				if (HeadObj.expires) {
+					let expires = new Date(HeadObj.expires);
+					if ((new Date()).getTime() < expires.getTime()) {
+						cstream = _fs.createWriteStream(file);
+					}
+				}
+
+				if (cstream) {
+					cstream.write(head);
+					cstream.write(body);
+				}
+				head = null;
+			}
+		} else {
+			if (cstream) cstream.write(data);
+		}
+	});
+
+	socket.on('end', function (data) {
+		if (cstream) cstream.close();
+	});
+}
+
+function isCached(file) {
+	try {
+		if (_fs.existsSync(file)) {
+			var head = readCacheHeaderSync(file);
+			var HeadObj = parseHead(head);
+			if (HeadObj.expires) {
+				let expires = new Date(HeadObj.expires);
+				if ((new Date()).getTime() < expires.getTime()) {
+					return true;
+				}
+			}
+		}
+	} catch (e) {}
+
+	return false;
+}
+
+/**
+ *
+ * @param {string} file
+ * @param {function} cb
+ * @return {module:net.Socket}
+ */
+function CacheSocket(file, cb) {
+	var stream = _fs.createReadStream(file);
+
+	var srv = _net.createServer(function(sock) {
+		sock.on('data', function (chunk) {
+			stream.pipe(sock);
+			stream.on('end', function () {
+				sock.end();
+				srv.close();
+			});
+		});
+	});
+
+	var socket = new _net.Socket();
+
+	srv.listen(0, function() {
+		socket.connect({host: '127.0.0.1', port: srv.address().port});
+		cb(socket);
+	});
+
+	return socket;
+}
+
 /**
  * @extends {module:http.Agent|module:https.Agent}
  * @constructor
@@ -97,128 +192,41 @@ function Agent(opt, agent) {
 	this.path = opt.path;
 	this.prefix = opt.prefix;
 
-	this.getKey = function (options) {
-		if (!options.href) {
-			options.href = '';
-
-			if (!options.protocol) {
-				if (options.port === 443) options.protocol = 'https:';
-				else options.protocol = 'http:';
-			}
-			options.href += options.protocol+'//';
-			if (options.auth) options.href += options.auth+'@';
-			options.href += options.host;
-			if (options.port) {
-				if (
-					(options.href.indexOf('http:') > -1 && options.port !== 80) ||
-					(options.href.indexOf('https:') > -1 && options.port !== 443) ||
-					(options.href.indexOf('http:') < 0 && options.href.indexOf('https:') < 0)
-				) {
-					options.href += ':'+options.port;
-				}
-			}
-			options.href += options.pathname || options.path || '/';
-			if (options.query) options.href += '?'+options.query;
-			else if (options.search) options.href += options.search;
-		}
-		var data = [options.href];
-		if (options.method) data.push(options.method);
-		if (options.protocol) data.push(options.protocol);
-		if (options.headers) data.push(JSON.stringify(options.headers));
-
-		var md5sum = _crypto.createHash('md5');
-		md5sum.update(data.join('|'));
-
-		return md5sum.digest('hex');
-	};
-
 	this.getCacheFilePath = function (options) {
-		var key = this.getKey(options);
+		var key = getKey(options);
 		var fp = _path.normalize(this.path + _path.sep + this.prefix + key);
 		return _path.normalize(this.path + _path.sep + this.prefix + key) + '.cache';
 	};
-
-	this.createCache = function (socket, file) {
-		var cstream;
-		var head = Buffer.alloc(0);
-		var spos = -1;
-		socket.on('data', function (data) {
-			if (head !== null) {
-				head = Buffer.concat([head, data], head.length+data.length);
-				if ((spos = head.indexOf("\r\n\r\n")) > -1) {
-					var body = head.slice(spos+4, head.length);
-					head = head.slice(0, spos+4);
-					var HeadObj = parseHead(head.toString());
-
-					if (HeadObj.expires) {
-						let expires = new Date(HeadObj.expires);
-						if ((new Date()).getTime() < expires.getTime()) {
-							cstream = _fs.createWriteStream(file);
-						}
-					}
-
-					if (cstream) {
-						cstream.write(head);
-						cstream.write(body);
-					}
-					head = null;
-				}
-			} else {
-				if (cstream) cstream.write(data);
-			}
-		});
-
-		socket.on('end', function (data) {
-			if (cstream) cstream.close();
-		});
-	};
-
-	this.isCached = function (file) {
-		try {
-			if (_fs.existsSync(file)) {
-				var head = readCacheHeaderSync(file);
-				var HeadObj = parseHead(head);
-				if (HeadObj.expires) {
-					let expires = new Date(HeadObj.expires);
-					if ((new Date()).getTime() < expires.getTime()) {
-						return true;
-					}
-				}
-			}
-		} catch (e) {
-			debugger;
-		}
-
-		return false;
-	}
 
 	this.createConnection = function (options, callback) {
 		var cacheFile = this.getCacheFilePath(options);
 		//console.info('Cache: ', cacheFile);
 
-		if (this.isCached(cacheFile)) {
+		if (isCached(cacheFile)) {
 			return CacheSocket(cacheFile, callback);
 		}
 
 		var socket = this.createConnectionOrig(options, callback);
-		_this.createCache(socket, cacheFile);
+		createCache(socket, cacheFile);
 		return socket;
 	};
 
-	this.callback = function(req, options) {
+	this.callback = function(req, options, cb) {
 		var promise = null;
 		var cacheFile = this.getCacheFilePath(options);
 
 		//console.info('Cache: ',cacheFile);
 
-		if (this.isCached(cacheFile)) {
+		if (isCached(cacheFile)) {
 			promise = new Promise(function (resolve, reject) {
 				try {
 					CacheSocket(cacheFile, function (socket) {
 						socket.on('connect', function () {
+							if (cb) setTimeout(function () { cb(null, socket);}, 1);
 							resolve(socket);
 						});
 						socket.on('error', function (err) {
+							if (cb) setTimeout(function () { cb(err);}, 1);
 							reject(err);
 						});
 					});
@@ -230,10 +238,37 @@ function Agent(opt, agent) {
 
 		// Create default request socket
 		if (!promise) {
-			promise = this.callbackOrig(req, options);
-			promise.then(function (socket) {
-				_this.createCache(socket, cacheFile);
+			var cached = false;
+			var cb_send = false;
+			promise = this.callbackOrig(req, options, function (err, socket) {
+				if (!cached && !err) {
+					cached = true;
+					createCache(socket, cacheFile);
+				}
+				if (!cb_send && cb) {
+					cb_send = true;
+					cb(err, socket);
+				}
 			});
+			if (promise) {
+				promise
+					.then(function (socket) {
+						if (!cached) {
+							cached = true;
+							createCache(socket, cacheFile);
+						}
+						if (!cb_send && cb) {
+							cb_send = true;
+							cb(null, socket);
+						}
+					})
+					.catch(function (err) {
+						if (!cb_send && cb) {
+							cb_send = true;
+							cb(err);
+						}
+					});
+			}
 		}
 
 		return promise;
