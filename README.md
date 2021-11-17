@@ -1,12 +1,12 @@
 # File based HTTP & HTTPS Cache agent
 Compatible with http-proxy-agent, https-proxy-agent and proxy-agent.
 
-##Installation
+## Installation
 ```cmd
 npm install --save http-cache-agent
 ```
 
-##Usage:
+## Usage:
 ```javascript
 const CacheAgent = require('http-cache-agent');
 const https = require('https');
