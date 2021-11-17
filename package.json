@@ -15,7 +15,7 @@
     "cache"
   ],
   "author": "COMLOG GmbH (Anatolij Rau)",
-  "license": "SEE LICENSE IN LICENSE file",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ar-comlog/http-cache-agent/issues"
   },
