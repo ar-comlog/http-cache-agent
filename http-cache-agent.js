@@ -158,6 +158,7 @@ function CacheSocket(file, cb) {
 			stream.on('end', function () {
 				sock.end();
 				srv.close();
+				if (stream) stream.close();
 			});
 		});
 	});
