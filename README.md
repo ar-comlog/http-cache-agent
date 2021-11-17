@@ -1,12 +1,12 @@
-# http-cache-agent
-File based HTTP + HTTPS Cache agent. Compatible with http-proxy-agent and proxy-agent.
+# File based HTTP & HTTPS Cache agent
+Compatible with http-proxy-agent, https-proxy-agent and proxy-agent.
 
-###Installation
+##Installation
 ```cmd
 npm install --save http-cache-agent
 ```
 
-###Usage:
+##Usage:
 ```javascript
 const CacheAgent = require('http-cache-agent');
 const https = require('https');
@@ -15,7 +15,7 @@ const https = require('https');
 CacheAgent.path = '/usr/local/tmp';
 ```
 
-###### Get content
+#### Get content
 ```javascript
 var ca = CacheAgent.https();
 var req = https.request(
@@ -44,7 +44,7 @@ req.on('error', function(err) {
 req.end();
 ```
 
-###### Download
+#### Download
 ```javascript
 var fs = require('fs');
 var ca = CacheAgent.https();
@@ -63,7 +63,7 @@ req.on('error', error => {
 req.end();
 ```
 
-###### With http-proxy-agent
+#### With http-proxy-agent
 ```javascript
 var ProxyAgent = require('https-proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
@@ -91,7 +91,7 @@ req.on('error', error => {
 req.end();
 ```
 
-###### With proxy-agent
+#### With proxy-agent
 ```javascript
 var ProxyAgent = require('proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
@@ -120,7 +120,7 @@ req.end();
 ```
 
 
-###### Get request 
+#### Get request 
 ```javascript
 var ca = CacheAgent.https();
 var req = https.get(
@@ -148,21 +148,21 @@ req.on('error', function(e) {
 });
 ```
 
-###### Reset cache (set expires date to 1970-01-01T00:00:00) 
+#### Reset cache (set expires date to 1970-01-01T00:00:00) 
 ```javascript
 CacheAgent.reset(function (err) {
    console.error(err);
 });
 ```
 
-###### Cleanup cache files (remove expired files)
+#### Cleanup cache files (remove expired files)
 ```javascript
 CacheAgent.cleanup(function (err) {
    console.error(err);
 });
 ```
 
-###### Get all cache files
+#### Get all cache files
 ```javascript
 CacheAgent.getCacheFiles(function (err, files) {
    if (err) console.error(err);
