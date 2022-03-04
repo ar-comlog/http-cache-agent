@@ -1,4 +1,5 @@
-const CacheAgent = require('./http-cache-agent');
+const CacheAgent = require('../dist/http-cache-agent');
+const http = require('http');
 const https = require('https');
 
 // Download
@@ -19,12 +20,11 @@ req.on('error', error => {
 
 req.end();
 /**/
-
-// Text
 /*
+// Text
 var ca = CacheAgent.https();
 var req = https.request(
-	'https://www.google.de/manifest?pwa=webhp',
+	'http://localtest.speedorder.de/_index.html',
 	{agent: ca},
 	function (res) {
 		var data = '';
@@ -50,7 +50,8 @@ req.end();
 var ProxyAgent = require('proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
 
-var ca = CacheAgent.https(null, pa);
+//var ca = CacheAgent.auto(null, pa);
+var ca = CacheAgent.auto({rejectUnauthorized: false});
 var req = https.request(
 	'https://www.google.de/favicon.ico',
 	{agent: ca},
@@ -73,13 +74,17 @@ req.end();
 /**/
 
 // HTTP Proxy Agent
-/**
+/*
 var ProxyAgent = require('https-proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
 
-var ca = CacheAgent.https(null, pa);
-var req = https.request(
-	'https://www.google.de/favicon.ico',
+//var Agent = require('../dist/agent');
+//var pa = new Agent.default('http://localhost:8118');
+
+//var ca = CacheAgent.https(null, pa);
+var ca = CacheAgent.auto(null, pa);
+var req = http.request(
+	'http://localtest.speedorder.de/_index.html',
 	{agent: ca},
 	function (res) {
 		var data = '';

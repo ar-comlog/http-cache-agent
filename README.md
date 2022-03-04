@@ -17,7 +17,37 @@ CacheAgent.path = '/usr/local/tmp';
 
 #### Get content
 ```javascript
-var ca = CacheAgent.https();
+var ca = CacheAgent.https(); // OR CacheAgent.auto()
+var req = https.request(
+   'https://www.google.de/manifest?pwa=webhp',
+   {agent: ca},
+   function (res) {
+      var data = '';
+      res.on('data', function (chunk) {
+         data += chunk
+      });
+
+      res.on('end', function () {
+         console.info(data);
+      });
+   }
+);
+
+res.on('end', function () {
+   console.info(data);
+});
+
+req.on('error', function(err) {
+    console.error(error);
+});
+
+req.end();
+```
+
+#### Custom socket settings
+```javascript
+// rejectUnauthorized: false -> ignore certificate errors
+var ca = CacheAgent.https({rejectUnauthorized: false});
 var req = https.request(
    'https://www.google.de/manifest?pwa=webhp',
    {agent: ca},
@@ -47,7 +77,7 @@ req.end();
 #### Download
 ```javascript
 var fs = require('fs');
-var ca = CacheAgent.https();
+var ca = CacheAgent.auto();
 var req = https.get(
    'https://www.google.de/favicon.ico',
    {agent: ca},
@@ -96,7 +126,7 @@ req.end();
 var ProxyAgent = require('proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
 
-var ca = CacheAgent.https(null, pa);
+var ca = CacheAgent.auto(null, pa);
 var req = https.request(
    'https://www.google.de/favicon.ico',
    {agent: ca},
