@@ -200,7 +200,7 @@ function CacheSocket(file: string, cb: Function) : _net.Socket {
 	return socket;
 }
 
-class CacheAgent extends Agent {
+class ComlogCacheAgent extends Agent {
 	private agent?: _http.Agent | _https.Agent | Agent;
 	private path =  _os.tmpdir();
 	private prefix = 'node_ca_';
@@ -323,7 +323,7 @@ class CacheAgent extends Agent {
 	}/**/
 }
 
-class HTTPCacheAgent extends CacheAgent {
+class HTTPCacheAgent extends ComlogCacheAgent {
 	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent) {
 		if (!opt) opt = {} as CAOptions;
 		opt.secureEndpoint = false;
@@ -331,7 +331,7 @@ class HTTPCacheAgent extends CacheAgent {
 	}
 }
 
-class HTTPSCacheAgent extends CacheAgent {
+class HTTPSCacheAgent extends ComlogCacheAgent {
 	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent) {
 		if (!opt) opt = {} as CAOptions;
 		opt.secureEndpoint = true;
@@ -412,7 +412,7 @@ class Init {
 	 */
 	auto (opt?: CAOptions, agent?: _https.Agent) {
 		opt = this._opt(opt);
-		return new CacheAgent(opt, agent);
+		return new ComlogCacheAgent(opt, agent);
 	}
 
 	getCacheFiles (opt: any, cb?: Function) {
