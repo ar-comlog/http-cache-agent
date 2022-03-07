@@ -184,7 +184,7 @@ function CacheSocket(file, cb) {
     });
     return socket;
 }
-class CacheAgent extends agent_base_1.Agent {
+class ComlogCacheAgent extends agent_base_1.Agent {
     constructor(opt, agent) {
         super(opt);
         this.path = os_1.default.tmpdir();
@@ -292,7 +292,7 @@ class CacheAgent extends agent_base_1.Agent {
         });
     } /**/
 }
-class HTTPCacheAgent extends CacheAgent {
+class HTTPCacheAgent extends ComlogCacheAgent {
     constructor(opt, agent) {
         if (!opt)
             opt = {};
@@ -300,7 +300,7 @@ class HTTPCacheAgent extends CacheAgent {
         super(opt, agent);
     }
 }
-class HTTPSCacheAgent extends CacheAgent {
+class HTTPSCacheAgent extends ComlogCacheAgent {
     constructor(opt, agent) {
         if (!opt)
             opt = {};
@@ -377,7 +377,7 @@ class Init {
      */
     auto(opt, agent) {
         opt = this._opt(opt);
-        return new CacheAgent(opt, agent);
+        return new ComlogCacheAgent(opt, agent);
     }
     getCacheFiles(opt, cb) {
         opt = this._opt(opt);

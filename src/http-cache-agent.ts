@@ -201,10 +201,10 @@ function CacheSocket(file: string, cb: Function) : _net.Socket {
 }
 
 class ComlogCacheAgent extends Agent {
-	private agent?: _http.Agent | _https.Agent | Agent;
-	private path =  _os.tmpdir();
-	private prefix = 'node_ca_';
-	private cache : CAOptions;
+	public agent?: _http.Agent | _https.Agent | Agent;
+	public path =  _os.tmpdir();
+	public prefix = 'node_ca_';
+	public cache : CAOptions;
 
 	public secureEndpoint = false;
 
