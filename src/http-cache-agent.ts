@@ -17,9 +17,10 @@ interface CAClientRequest extends ClientRequest {
 }
 
 interface CAOptions extends AgentOptions, tls.ConnectionOptions {
-	filepath?: string
+	filepath?: string,
 	prefix?: string,
-	secureEndpoint?: boolean
+	secureEndpoint?: boolean,
+	agent?: Agent,
 }
 
 function getKey(options: RequestOptions) {
@@ -210,7 +211,7 @@ class ComlogCacheAgent extends Agent {
 
 	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent) {
 		super(opt);
-		this.agent = agent;
+		this.agent = agent ? agent : (opt && opt.agent ? opt.agent : undefined);
 		if (opt) {
 			if (typeof opt.filepath != 'undefined') {
 				this.path = opt.filepath;
