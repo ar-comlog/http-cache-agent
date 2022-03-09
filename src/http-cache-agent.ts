@@ -389,7 +389,7 @@ class Init {
 	 * @param {module:http.Agent} [agent]
 	 * @return {Agent}
 	 */
-	http (opt?: CAOptions, agent?: _http.Agent) {
+	http (opt?: CAOptions, agent?: _http.Agent | Agent) {
 		opt = this._opt(opt);
 		return new HTTPCacheAgent(opt, agent);
 	}
@@ -400,7 +400,7 @@ class Init {
 	 * @param {module:http.Agent} [agent]
 	 * @return {Agent}
 	 */
-	https (opt?: CAOptions, agent?: _https.Agent) {
+	https (opt?: CAOptions, agent?: _https.Agent | Agent) {
 		opt = this._opt(opt);
 		return new HTTPSCacheAgent(opt, agent);
 	}
@@ -411,7 +411,7 @@ class Init {
 	 * @param {module:http.Agent} [agent]
 	 * @return {Agent}
 	 */
-	auto (opt?: CAOptions, agent?: _https.Agent) {
+	auto (opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent) {
 		opt = this._opt(opt);
 		return new ComlogCacheAgent(opt, agent);
 	}

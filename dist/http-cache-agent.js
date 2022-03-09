@@ -190,7 +190,7 @@ class ComlogCacheAgent extends agent_base_1.Agent {
         this.path = os_1.default.tmpdir();
         this.prefix = 'node_ca_';
         this.secureEndpoint = false;
-        this.agent = agent;
+        this.agent = agent ? agent : (opt && opt.agent ? opt.agent : undefined);
         if (opt) {
             if (typeof opt.filepath != 'undefined') {
                 this.path = opt.filepath;
