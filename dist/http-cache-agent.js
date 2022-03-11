@@ -313,12 +313,12 @@ class HTTPSCacheAgent extends ComlogCacheAgent {
 }
 class Init {
     constructor() {
-        //this.path = _os.tmpdir();
+        //this.filepath = _os.tmpdir();
         //this.prefix = 'node_ca_';
-        this.path = os_1.default.tmpdir();
+        this.filepath = os_1.default.tmpdir();
         this.prefix = 'node_ca_';
         try {
-            if (!fs_1.default.statSync(this.path).isDirectory()) {
+            if (!fs_1.default.statSync(this.filepath).isDirectory()) {
                 throw new Error('No temp folder found');
             }
         }
@@ -333,7 +333,7 @@ class Init {
                 var p = check.shift();
                 try {
                     if (fs_1.default.statSync(p).isDirectory()) {
-                        this.path = p;
+                        this.filepath = p;
                         break;
                     }
                 }
@@ -348,7 +348,7 @@ class Init {
     _opt(opt) {
         if (!opt)
             opt = {};
-        opt.path = opt.path || this.path;
+        opt.filepath = opt.filepath || this.filepath;
         opt.prefix = (typeof opt.prefix !== "string") ? this.prefix : opt.prefix;
         return opt;
     }
@@ -392,7 +392,7 @@ class Init {
         var scheck = function (file) {
             return file.indexOf('.cache') === file.length - 6;
         };
-        fs_1.default.readdir(opt.path, function (err, files) {
+        fs_1.default.readdir(opt.filepath, function (err, files) {
             if (err) {
                 if (cb)
                     cb(err, null);
@@ -422,7 +422,7 @@ class Init {
             }
             if (files)
                 for (var i = 0; i < files.length; i++) {
-                    var fp = path_1.default.normalize(opt.path + path_1.default.sep + files[i]);
+                    var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + files[i]);
                     try {
                         var head = readCacheHeaderSync(fp);
                         var HeadObj = parseHead(head);
@@ -466,7 +466,7 @@ class Init {
             var _queuHanldle = function (index, qcb) {
                 if (index < files.length) {
                     var file = files[index];
-                    var fp = path_1.default.normalize(opt.path + path_1.default.sep + file);
+                    var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + file);
                     var fpc = fp + '.tmp';
                     var rstream = fs_1.default.createReadStream(fp);
                     var wstream = null;

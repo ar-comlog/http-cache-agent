@@ -345,15 +345,15 @@ class HTTPSCacheAgent extends ComlogCacheAgent {
 }
 
 class Init {
-	private path: string = _os.tmpdir();
+	private filepath: string = _os.tmpdir();
 	private prefix = 'node_ca_';
 
 	constructor() {
-		//this.path = _os.tmpdir();
+		//this.filepath = _os.tmpdir();
 		//this.prefix = 'node_ca_';
 
 		try {
-			if (!_fs.statSync(this.path).isDirectory()) {
+			if (!_fs.statSync(this.filepath).isDirectory()) {
 				throw new Error('No temp folder found');
 			}
 		} catch (e) {
@@ -367,7 +367,7 @@ class Init {
 				var p = check.shift() as string;
 				try {
 					if (_fs.statSync(p).isDirectory()) {
-						this.path = p;
+						this.filepath = p;
 						break;
 					}
 				} catch (e) {}
@@ -382,7 +382,7 @@ class Init {
 	 */
 	private _opt (opt: any) {
 		if (!opt) opt = {};
-		opt.path = opt.path || this.path;
+		opt.filepath = opt.filepath || this.filepath;
 		opt.prefix = (typeof opt.prefix !== "string") ? this.prefix : opt.prefix;
 		return opt;
 	}
@@ -430,7 +430,7 @@ class Init {
 			return file.indexOf('.cache') === file.length-6;
 		};
 
-		_fs.readdir(opt.path, function (err, files) {
+		_fs.readdir(opt.filepath, function (err, files) {
 			if (err) {
 				if (cb) cb(err, null);
 				return;
@@ -462,7 +462,7 @@ class Init {
 			}
 
 			if (files) for (var i=0; i < files.length;i++) {
-				var fp = _path.normalize(opt.path + _path.sep + files[i]);
+				var fp = _path.normalize(opt.filepath + _path.sep + files[i]);
 				try {
 					var head = readCacheHeaderSync(fp);
 					var HeadObj = parseHead(head);
@@ -508,7 +508,7 @@ class Init {
 			var _queuHanldle = function (index: number, qcb: Function) {
 				if (index < files.length) {
 					var file = files[index];
-					var fp = _path.normalize(opt.path + _path.sep + file);
+					var fp = _path.normalize(opt.filepath + _path.sep + file);
 					var fpc = fp + '.tmp';
 					var rstream = _fs.createReadStream(fp);
 					var wstream : _fs.WriteStream | null = null;
