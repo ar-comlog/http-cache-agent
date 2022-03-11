@@ -12,7 +12,7 @@ const CacheAgent = require('http-cache-agent');
 const https = require('https');
 
 // Change path (default is temp)
-CacheAgent.path = '/usr/local/tmp';
+CacheAgent.filepath = '/usr/local/tmp';
 ```
 
 #### Get content
