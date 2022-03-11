@@ -227,8 +227,11 @@ class ComlogCacheAgent extends agent_base_1.Agent {
             var _this = this;
             var promise = null;
             var cacheFile = this.getCacheFilePath(options);
+            var cached = false;
+            var cb_send = false;
             console.info('Cache: ', cacheFile);
             if (isCached(cacheFile)) {
+                cached = true;
                 promise = new Promise(function (resolve, reject) {
                     CacheSocket(cacheFile, function (socket) {
                         socket.on('connect', function () {
@@ -243,8 +246,6 @@ class ComlogCacheAgent extends agent_base_1.Agent {
             // Create default request socket
             if (!promise) {
                 options = Object.assign(options, _this.cache);
-                var cached = false;
-                var cb_send = false;
                 if (this.agent) {
                     // @ts-ignore
                     if (this.agent.callback) {
