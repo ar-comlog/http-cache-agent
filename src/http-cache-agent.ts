@@ -255,7 +255,7 @@ class ComlogCacheAgent extends Agent {
 		var cacheFile = this.getCacheFilePath(options);
 		var cached = false;
 		var cb_send = false;
-		console.info('Cache: ',cacheFile);
+		//console.info('Cache: ',cacheFile);
 
 		if (isCached(cacheFile)) {
 			cached = true;
