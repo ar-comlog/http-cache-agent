@@ -136,6 +136,9 @@ function createCache(socket, file) {
                 cstream.write(data);
         }
     });
+    /*socket.on('error', function (err) {
+        console.error(err);
+    });*/
     socket.on('end', function () {
         if (cstream)
             cstream.close();
@@ -187,14 +190,14 @@ function CacheSocket(file, cb) {
 class ComlogCacheAgent extends agent_base_1.Agent {
     constructor(opt, agent) {
         super(opt);
-        this.path = os_1.default.tmpdir();
+        this.filepath = os_1.default.tmpdir();
         this.prefix = 'node_ca_';
         this.secureEndpoint = false;
         this.agent = agent ? agent : (opt && opt.agent ? opt.agent : undefined);
         if (opt) {
             if (typeof opt.filepath != 'undefined') {
-                this.path = opt.filepath;
-                delete opt.path;
+                this.filepath = opt.filepath;
+                delete opt.filepath;
             }
             if (typeof opt.prefix != 'undefined') {
                 this.prefix = opt.prefix;
@@ -211,7 +214,7 @@ class ComlogCacheAgent extends agent_base_1.Agent {
      */
     getCacheFilePath(options) {
         var key = getKey(options);
-        return path_1.default.normalize(this.path + path_1.default.sep + this.prefix + key) + '.cache';
+        return path_1.default.normalize(this.filepath + path_1.default.sep + this.prefix + key) + '.cache';
     }
     /**
      * Called when the node-core HTTP client library is creating a

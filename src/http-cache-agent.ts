@@ -1,4 +1,4 @@
-import _os, {type} from 'os';
+import _os from 'os';
 import _fs from 'fs';
 import _path from 'path';
 import _crypto from 'crypto';
@@ -148,6 +148,10 @@ function createCache(socket: _stream.Duplex, file: string) {
 		}
 	});
 
+	/*socket.on('error', function (err) {
+		console.error(err);
+	});*/
+
 	socket.on('end', function () {
 		if (cstream) cstream.close();
 	});
@@ -203,7 +207,7 @@ function CacheSocket(file: string, cb: Function) : _net.Socket {
 
 class ComlogCacheAgent extends Agent {
 	public agent?: _http.Agent | _https.Agent | Agent;
-	public path =  _os.tmpdir();
+	public filepath =  _os.tmpdir();
 	public prefix = 'node_ca_';
 	public cache : CAOptions;
 
@@ -214,8 +218,8 @@ class ComlogCacheAgent extends Agent {
 		this.agent = agent ? agent : (opt && opt.agent ? opt.agent : undefined);
 		if (opt) {
 			if (typeof opt.filepath != 'undefined') {
-				this.path = opt.filepath;
-				delete opt.path;
+				this.filepath = opt.filepath;
+				delete opt.filepath;
 			}
 			if (typeof opt.prefix != 'undefined') {
 				this.prefix = opt.prefix;
@@ -232,7 +236,7 @@ class ComlogCacheAgent extends Agent {
 	 */
 	getCacheFilePath (options: RequestOptions) : string {
 		var key = getKey(options);
-		return _path.normalize(this.path + _path.sep + this.prefix + key) + '.cache';
+		return _path.normalize(this.filepath + _path.sep + this.prefix + key) + '.cache';
 	}
 
 	/**
