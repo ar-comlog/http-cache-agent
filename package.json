@@ -1,8 +1,9 @@
 {
 	"name": "http-cache-agent",
-	"version": "1.4.2",
+	"version": "1.5.0",
 	"description": "HTTP(S) Cache Agent. Compatible with http-proxy-agent, https-proxy-agent, proxy-agent",
 	"main": "dist/http-cache-agent.js",
+	"types": "./dist/types.d.ts",
 	"scripts": {
 		"test": "node test/test.js",
 		"build": "tsc",

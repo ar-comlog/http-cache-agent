@@ -1,10 +1,9 @@
 {
 	"compilerOptions": {
-		"target": "es2016",
+		"target": "es2015",
 		"module": "commonjs",
 		"lib": [
-			"es6",
-			"es2017.sharedmemory"
+			"esnext"
 		],
 		"allowJs": true,
 		"checkJs": true,
@@ -14,9 +13,14 @@
 		"skipLibCheck": true,
 		"outDir": "dist",
 		"rootDir": "src",
-		"sourceMap": true
+		"sourceMap": true,
+		"declaration": true,
+		"typeRoots": [
+			"./@types",
+			"./node_modules/@types"
+		]
 	},
 	"compileOnSave": false,
-	"exclude": [ "./**.js", "./**.bak.ts" ],
-	"include": [ "./src/*.ts" ]
+	"exclude": [ "./**.js", "./src/**/*.bak.ts", "node_modules"],
+	"include": [ "./src/**/*.ts" ]
 }

@@ -5,23 +5,13 @@ import _crypto from 'crypto';
 import _net from 'net';
 import _http from "http";
 import _https from "https";
-import Header from "./Header";
+import {Header, CAOptions, CAClientRequest} from "./types";
 import _stream from "stream";
 import net from "net";
 import { Agent, ClientRequest, RequestOptions, AgentOptions } from 'agent-base';
 import tls from "tls";
 
-interface CAClientRequest extends ClientRequest {
-	path: string;
-	pathname: string;
-}
 
-interface CAOptions extends AgentOptions, tls.ConnectionOptions {
-	filepath?: string,
-	prefix?: string,
-	secureEndpoint?: boolean,
-	agent?: Agent,
-}
 
 function getKey(options: RequestOptions) {
 	// @ts-ignore
