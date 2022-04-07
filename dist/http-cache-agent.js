@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.clear = exports.reset = exports.cleanup = exports.getCacheFiles = exports.auto = exports.https = exports.http = exports.HTTPSCacheAgent = exports.HTTPCacheAgent = exports.ComlogCacheAgent = void 0;
 const os_1 = __importDefault(require("os"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
@@ -296,6 +297,7 @@ class ComlogCacheAgent extends agent_base_1.Agent {
         });
     } /**/
 }
+exports.ComlogCacheAgent = ComlogCacheAgent;
 class HTTPCacheAgent extends ComlogCacheAgent {
     constructor(opt, agent) {
         if (!opt)
@@ -304,6 +306,7 @@ class HTTPCacheAgent extends ComlogCacheAgent {
         super(opt, agent);
     }
 }
+exports.HTTPCacheAgent = HTTPCacheAgent;
 class HTTPSCacheAgent extends ComlogCacheAgent {
     constructor(opt, agent) {
         if (!opt)
@@ -312,225 +315,264 @@ class HTTPSCacheAgent extends ComlogCacheAgent {
         super(opt, agent);
     }
 }
-class Init {
-    constructor() {
-        //this.filepath = _os.tmpdir();
-        //this.prefix = 'node_ca_';
-        this.filepath = os_1.default.tmpdir();
-        this.prefix = 'node_ca_';
-        try {
-            if (!fs_1.default.statSync(this.filepath).isDirectory()) {
-                throw new Error('No temp folder found');
-            }
-        }
-        catch (e) {
-            var check = [
-                path_1.default.dirname(__filename) + path_1.default.sep + 'temp',
-                path_1.default.dirname(path_1.default.dirname(__filename)) + path_1.default.sep + 'temp',
-                path_1.default.dirname(path_1.default.dirname(path_1.default.dirname(__filename))) + path_1.default.sep + 'temp',
-                path_1.default.dirname(path_1.default.dirname(path_1.default.dirname(path_1.default.dirname(__filename)))) + path_1.default.sep + 'temp'
-            ];
-            while (check.length > 0) {
-                var p = check.shift();
-                try {
-                    if (fs_1.default.statSync(p).isDirectory()) {
-                        this.filepath = p;
-                        break;
-                    }
-                }
-                catch (e) { }
-            }
-        }
-    }
-    /**
-     * @param {*} [opt]
-     * @constructor
-     */
-    _opt(opt) {
-        if (!opt)
-            opt = {};
-        opt.filepath = opt.filepath || this.filepath;
-        opt.prefix = (typeof opt.prefix !== "string") ? this.prefix : opt.prefix;
-        return opt;
-    }
-    /**
-     *
-     * @param {{path:string, prefix:string}|null} [opt] Other options in https://nodejs.org/api/http.html#new-agentoptions
-     * @param {module:http.Agent} [agent]
-     * @return {Agent}
-     */
-    http(opt, agent) {
-        opt = this._opt(opt);
-        return new HTTPCacheAgent(opt, agent);
-    }
-    /**
-     *
-     * @param {{}} [opt]
-     * @param {module:http.Agent} [agent]
-     * @return {Agent}
-     */
-    https(opt, agent) {
-        opt = this._opt(opt);
-        return new HTTPSCacheAgent(opt, agent);
-    }
-    /**
-     * Create HTTP or HTTPS Cache agent. Autodetect!
-     * @param {{}} [opt]
-     * @param {module:http.Agent} [agent]
-     * @return {Agent}
-     */
-    auto(opt, agent) {
-        opt = this._opt(opt);
-        return new ComlogCacheAgent(opt, agent);
-    }
-    getCacheFiles(opt, cb) {
-        opt = this._opt(opt);
-        var pcheck;
-        if (opt.prefix !== '')
-            pcheck = function (file) { return file.indexOf(opt.prefix) === 0; };
-        else
-            pcheck = function () { return true; };
-        var scheck = function (file) {
-            return file.indexOf('.cache') === file.length - 6;
-        };
-        fs_1.default.readdir(opt.filepath, function (err, files) {
-            if (err) {
-                if (cb)
-                    cb(err, null);
-                return;
-            }
-            var result = [];
-            for (var i = 0; i < files.length; i++) {
-                if (pcheck(files[i]) && scheck(files[i])) {
-                    result.push(files[i]);
-                }
-            }
+exports.HTTPSCacheAgent = HTTPSCacheAgent;
+var filepath = os_1.default.tmpdir();
+var prefix = 'node_ca_';
+/**
+ * @param {*} [opt]
+ * @constructor
+ */
+function _opt(opt) {
+    if (!opt || typeof opt !== 'object')
+        opt = {};
+    opt.filepath = opt.filepath || filepath;
+    opt.prefix = (typeof opt.prefix !== "string") ? prefix : opt.prefix;
+    return opt;
+}
+/**
+ * Create HTTP Agent
+ * @param {{path:string, prefix:string}|null} [opt] Other options in https://nodejs.org/api/http.html#new-agentoptions
+ * @param {module:http.Agent} [agent]
+ * @return {Agent}
+ */
+function http(opt, agent) {
+    opt = _opt(opt);
+    return new HTTPCacheAgent(opt, agent);
+}
+exports.http = http;
+/**
+ * Create HTTPS Agent
+ * @param {{}} [opt]
+ * @param {module:http.Agent} [agent]
+ * @return {Agent}
+ */
+function https(opt, agent) {
+    opt = _opt(opt);
+    return new HTTPSCacheAgent(opt, agent);
+}
+exports.https = https;
+/**
+ * Create HTTP or HTTPS Cache agent. Autodetect!
+ * @param {{}} [opt]
+ * @param {module:http.Agent} [agent]
+ * @return {Agent}
+ */
+function auto(opt, agent) {
+    opt = _opt(opt);
+    return new ComlogCacheAgent(opt, agent);
+}
+exports.auto = auto;
+function getCacheFiles(opt, cb) {
+    opt = _opt(opt);
+    var pcheck;
+    if (opt.prefix !== '')
+        pcheck = function (file) { return file.indexOf(opt.prefix) === 0; };
+    else
+        pcheck = function () { return true; };
+    var scheck = function (file) {
+        return file.indexOf('.cache') === file.length - 6;
+    };
+    fs_1.default.readdir(opt.filepath, function (err, files) {
+        if (err) {
             if (cb)
-                cb(null, result);
-        });
-    }
-    cleanup(opt, cb) {
-        if (typeof opt == "function" && !cb) {
-            cb = opt;
-            opt = null;
+                cb(err, null);
+            return;
         }
-        opt = this._opt(opt);
-        this.getCacheFiles(opt, function (err, files) {
-            if (err) {
-                if (cb)
-                    cb(err);
-                return;
+        var result = [];
+        for (var i = 0; i < files.length; i++) {
+            if (pcheck(files[i]) && scheck(files[i])) {
+                result.push(files[i]);
             }
-            if (files)
-                for (var i = 0; i < files.length; i++) {
-                    var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + files[i]);
-                    try {
-                        var head = readCacheHeaderSync(fp);
-                        var HeadObj = parseHead(head);
-                        if (HeadObj.expires) {
-                            let expires = new Date(HeadObj.expires);
-                            if ((new Date()).getTime() > expires.getTime()) {
-                                fs_1.default.unlinkSync(fp);
-                            }
-                        }
-                        else {
+        }
+        if (cb)
+            cb(null, result);
+    });
+}
+exports.getCacheFiles = getCacheFiles;
+function cleanup(opt, cb) {
+    if (typeof opt == "function" && !cb) {
+        cb = opt;
+        opt = null;
+    }
+    opt = _opt(opt);
+    getCacheFiles(opt, function (err, files) {
+        if (err) {
+            if (cb)
+                cb(err);
+            return;
+        }
+        if (files)
+            for (var i = 0; i < files.length; i++) {
+                var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + files[i]);
+                try {
+                    var head = readCacheHeaderSync(fp);
+                    var HeadObj = parseHead(head);
+                    if (HeadObj.expires) {
+                        let expires = new Date(HeadObj.expires);
+                        if ((new Date()).getTime() > expires.getTime()) {
                             fs_1.default.unlinkSync(fp);
                         }
                     }
-                    catch (e) {
-                        if (!err) { // @ts-ignore
-                            err = e;
-                        }
-                        else { // @ts-ignore
-                            err.message += "\n" + e.message;
-                        }
+                    else {
+                        fs_1.default.unlinkSync(fp);
                     }
                 }
-            if (cb)
-                cb(err);
-        });
-    }
-    reset(opt, cb) {
-        if (typeof opt == "function" && !cb) {
-            cb = opt;
-            opt = null;
-        }
-        opt = this._opt(opt);
-        var errors = [];
-        this.getCacheFiles(opt, function (err, files) {
-            if (err) {
-                errors.push(err);
-                if (cb)
-                    cb(errors.length > 0 ? errors : null);
-                return;
+                catch (e) {
+                    if (!err) { // @ts-ignore
+                        err = e;
+                    }
+                    else { // @ts-ignore
+                        err.message += "\n" + e.message;
+                    }
+                }
             }
-            var _queuHanldle = function (index, qcb) {
-                if (index < files.length) {
-                    var file = files[index];
-                    var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + file);
-                    var fpc = fp + '.tmp';
-                    var rstream = fs_1.default.createReadStream(fp);
-                    var wstream = null;
-                    rstream.on('data', function (chunk) {
-                        if (!wstream) {
-                            wstream = fs_1.default.createWriteStream(fpc);
-                            wstream.on('error', function (err) {
+        if (cb)
+            cb(err);
+    });
+}
+exports.cleanup = cleanup;
+/**
+ * Reset cache Timestamp
+ * @param {opt: Object|Function} opt Options or callback function
+ * @param {Function} [cb] Callback function
+ */
+function reset(opt, cb) {
+    if (typeof opt == "function" && !cb) {
+        cb = opt;
+        opt = null;
+    }
+    opt = _opt(opt);
+    var errors = [];
+    getCacheFiles(opt, function (err, files) {
+        if (err) {
+            errors.push(err);
+            if (cb)
+                cb(errors.length > 0 ? errors : null);
+            return;
+        }
+        var _queuHanldle = function (index, qcb) {
+            if (index < files.length) {
+                var file = files[index];
+                var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + file);
+                var fpc = fp + '.tmp';
+                var rstream = fs_1.default.createReadStream(fp);
+                var wstream = null;
+                rstream.on('data', function (chunk) {
+                    if (!wstream) {
+                        wstream = fs_1.default.createWriteStream(fpc);
+                        wstream.on('error', function (err) {
+                            errors.push(err);
+                            rstream.close();
+                        });
+                    }
+                    var begin = chunk.indexOf('Expires:');
+                    if (begin > -1) {
+                        wstream.write(chunk.slice(0, begin));
+                        wstream.write('Expires: ' + (new Date(1970, 0, 1, 1, 0, 0)).toUTCString());
+                        var end = chunk.indexOf("\r\n", begin);
+                        if (end > -1) {
+                            wstream.write(chunk.slice(end));
+                        }
+                    }
+                    else {
+                        wstream.write(chunk);
+                    }
+                });
+                rstream.on('error', function (err) {
+                    errors.push(err);
+                });
+                rstream.on('close', function () {
+                    if (wstream) {
+                        wstream.close();
+                        wstream = null;
+                    }
+                    if (errors.length < 1) {
+                        fs_1.default.unlink(fp, function (err) {
+                            if (err) {
                                 errors.push(err);
-                                rstream.close();
-                            });
-                        }
-                        var begin = chunk.indexOf('Expires:');
-                        if (begin > -1) {
-                            wstream.write(chunk.slice(0, begin));
-                            wstream.write('Expires: ' + (new Date(1970, 0, 1, 1, 0, 0)).toUTCString());
-                            var end = chunk.indexOf("\r\n", begin);
-                            if (end > -1) {
-                                wstream.write(chunk.slice(end));
-                            }
-                        }
-                        else {
-                            wstream.write(chunk);
-                        }
-                    });
-                    rstream.on('error', function (err) {
-                        errors.push(err);
-                    });
-                    rstream.on('close', function () {
-                        if (wstream) {
-                            wstream.close();
-                            wstream = null;
-                        }
-                        if (errors.length < 1) {
-                            fs_1.default.unlink(fp, function (err) {
-                                if (err) {
-                                    errors.push(err);
-                                    fs_1.default.unlink(fpc, function (err) {
-                                        if (err)
-                                            errors.push(err);
-                                        _queuHanldle(index + 1, qcb);
-                                    });
-                                    return;
-                                }
-                                fs_1.default.rename(fpc, fp, function (err) {
+                                fs_1.default.unlink(fpc, function (err) {
                                     if (err)
                                         errors.push(err);
                                     _queuHanldle(index + 1, qcb);
                                 });
+                                return;
+                            }
+                            fs_1.default.rename(fpc, fp, function (err) {
+                                if (err)
+                                    errors.push(err);
+                                _queuHanldle(index + 1, qcb);
                             });
-                            return;
-                        }
-                        _queuHanldle(index + 1, qcb);
+                        });
+                        return;
+                    }
+                    _queuHanldle(index + 1, qcb);
+                });
+            }
+            else
+                qcb();
+        };
+        _queuHanldle(0, function () {
+            if (cb)
+                cb(errors.length > 0 ? errors : null);
+        });
+    });
+}
+exports.reset = reset;
+function clear(opt, cb) {
+    if (typeof opt == "function" && !cb) {
+        cb = opt;
+        opt = null;
+    }
+    opt = _opt(opt);
+    getCacheFiles(opt, function (err, files) {
+        if (err) {
+            if (cb)
+                cb(err);
+            return;
+        }
+        if (files) {
+            let _del = function (index) {
+                if (index < files.length) {
+                    var fp = path_1.default.normalize(opt.filepath + path_1.default.sep + files[index]);
+                    fs_1.default.unlink(fp, function () {
+                        _del(index + 1);
                     });
                 }
-                else
-                    qcb();
+                else {
+                    if (cb)
+                        cb(null, files);
+                }
             };
-            _queuHanldle(0, function () {
-                if (cb)
-                    cb(errors.length > 0 ? errors : null);
-            });
-        });
+            _del(0);
+            return;
+        }
+        if (cb)
+            cb(null, files);
+    });
+}
+exports.clear = clear;
+// init
+try {
+    if (!fs_1.default.statSync(filepath).isDirectory()) {
+        throw new Error('No temp folder found');
     }
 }
-module.exports = new Init();
+catch (e) {
+    var check = [
+        path_1.default.dirname(__filename) + path_1.default.sep + 'temp',
+        path_1.default.dirname(path_1.default.dirname(__filename)) + path_1.default.sep + 'temp',
+        path_1.default.dirname(path_1.default.dirname(path_1.default.dirname(__filename))) + path_1.default.sep + 'temp',
+        path_1.default.dirname(path_1.default.dirname(path_1.default.dirname(path_1.default.dirname(__filename)))) + path_1.default.sep + 'temp'
+    ];
+    while (check.length > 0) {
+        var p = check.shift();
+        try {
+            if (fs_1.default.statSync(p).isDirectory()) {
+                filepath = p;
+                break;
+            }
+        }
+        catch (e) { }
+    }
+}
 //# sourceMappingURL=http-cache-agent.js.map
