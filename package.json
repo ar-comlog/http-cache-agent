@@ -1,6 +1,6 @@
 {
 	"name": "http-cache-agent",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "HTTP(S) Cache Agent. Compatible with http-proxy-agent, https-proxy-agent, proxy-agent",
 	"main": "dist/http-cache-agent.js",
 	"scripts": {
