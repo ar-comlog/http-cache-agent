@@ -46,7 +46,7 @@ req.end();
 /**/
 
 // Proxy Agent
-
+/*
 var ProxyAgent = require('proxy-agent');
 var pa = new ProxyAgent('http://localhost:8118');
 
@@ -113,7 +113,7 @@ CacheAgent.reset(function (err) {
 	});
 });
 /**/
-/*
+
 var ca = CacheAgent.https();
 var req = https.get(
 	'https://www.google.de/favicon.ico',
@@ -138,4 +138,6 @@ var req = https.get(
 req.on('error', function(e) {
 	console.log('ERROR: ' + e.message);
 });
+
+req.end();
 /**/

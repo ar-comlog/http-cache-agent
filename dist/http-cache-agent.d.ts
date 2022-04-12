@@ -1,7 +1,7 @@
 /// <reference types="node" />
+import _net from 'net';
 import _http from "http";
 import _https from "https";
-import net from "net";
 import { Agent, ClientRequest, RequestOptions, AgentOptions } from 'agent-base';
 import tls from "tls";
 export interface Header {
@@ -38,7 +38,7 @@ export declare class ComlogCacheAgent extends Agent {
      *
      * @api protected
      */
-    callback(request: CAClientRequest, options: RequestOptions, cb?: Function): Promise<net.Socket>;
+    callback(request: CAClientRequest, options: RequestOptions, cb?: Function): Promise<_net.Socket>;
 }
 export declare class HTTPCacheAgent extends ComlogCacheAgent {
     constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent);

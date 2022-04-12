@@ -18,9 +18,10 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = __importDefault(require("crypto"));
 const net_1 = __importDefault(require("net"));
-const net_2 = __importDefault(require("net"));
 const agent_base_1 = require("agent-base");
 const tls_1 = __importDefault(require("tls"));
+var filepath = os_1.default.tmpdir();
+var prefix = 'node_ca_';
 function getKey(options) {
     // @ts-ignore
     let href = options.href || null;
@@ -169,6 +170,8 @@ function isCached(file) {
  */
 function CacheSocket(file, cb) {
     var stream = fs_1.default.createReadStream(file);
+    var PIPE_NAME = Date.now().toString(36);
+    var PIPE_PATH = "\\\\.\\pipe\\" + PIPE_NAME;
     var srv = net_1.default.createServer(function (sock) {
         sock.on('data', function (chunk) {
             stream.pipe(sock);
@@ -181,9 +184,9 @@ function CacheSocket(file, cb) {
         });
     });
     var socket = new net_1.default.Socket();
-    srv.listen(0, function () {
+    srv.listen(PIPE_PATH, function () {
         // @ts-ignore
-        socket.connect({ host: '127.0.0.1', port: srv.address().port });
+        socket.connect(PIPE_PATH);
         cb(socket);
     });
     return socket;
@@ -268,7 +271,7 @@ class ComlogCacheAgent extends agent_base_1.Agent {
                             socket = tls_1.default.connect(options);
                         }
                         else {
-                            socket = net_2.default.connect(options);
+                            socket = net_1.default.connect(options);
                         }
                         resolve(socket);
                     });
@@ -316,8 +319,6 @@ class HTTPSCacheAgent extends ComlogCacheAgent {
     }
 }
 exports.HTTPSCacheAgent = HTTPSCacheAgent;
-var filepath = os_1.default.tmpdir();
-var prefix = 'node_ca_';
 /**
  * @param {*} [opt]
  * @constructor

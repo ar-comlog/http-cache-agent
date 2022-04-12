@@ -6,9 +6,11 @@ import _net from 'net';
 import _http from "http";
 import _https from "https";
 import _stream from "stream";
-import net from "net";
 import { Agent, ClientRequest, RequestOptions, AgentOptions } from 'agent-base';
 import tls from "tls";
+
+var filepath: string = _os.tmpdir();
+var prefix = 'node_ca_';
 
 export interface Header {
 	protocol?: string,
@@ -186,8 +188,11 @@ function isCached(file: string) {
  * @param {Function} cb
  * @return {module:net.Socket}
  */
-function CacheSocket(file: string, cb: Function) : _net.Socket {
+function CacheSocket(file: string, cb: (socket: _net.Socket) => void) : _net.Socket {
 	var stream = _fs.createReadStream(file);
+
+	var PIPE_NAME = Date.now().toString(36);
+	var PIPE_PATH = "\\\\.\\pipe\\" + PIPE_NAME;
 
 	var srv = _net.createServer(function(sock) {
 		sock.on('data', function (chunk) {
@@ -202,9 +207,9 @@ function CacheSocket(file: string, cb: Function) : _net.Socket {
 
 	var socket = new _net.Socket();
 
-	srv.listen(0, function() {
+	srv.listen(PIPE_PATH, function() {
 		// @ts-ignore
-		socket.connect({host: '127.0.0.1', port: srv.address().port});
+		socket.connect(PIPE_PATH);
 		cb(socket);
 	});
 
@@ -255,7 +260,7 @@ export class ComlogCacheAgent extends Agent {
 		request: CAClientRequest,
 		options: RequestOptions,
 		cb?: Function
-	): Promise<net.Socket> {
+	): Promise<_net.Socket> {
 		var _this = this;
 		var promise = null;
 		var cacheFile = this.getCacheFilePath(options);
@@ -298,12 +303,12 @@ export class ComlogCacheAgent extends Agent {
 
 			if (!promise) {
 				promise = new Promise(function (resolve) {
-					let socket: net.Socket
+					let socket: _net.Socket
 					if (options.secureEndpoint) {
 						socket = tls.connect(options as tls.ConnectionOptions);
 					}
 					else {
-						socket = net.connect(options as net.NetConnectOpts);
+						socket = _net.connect(options as _net.NetConnectOpts);
 					}
 					resolve(socket);
 				});
@@ -349,10 +354,6 @@ export class HTTPSCacheAgent extends ComlogCacheAgent {
 		super(opt, agent);
 	}
 }
-
-
-var filepath: string = _os.tmpdir();
-var prefix = 'node_ca_';
 
 /**
  * @param {*} [opt]
