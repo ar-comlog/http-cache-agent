@@ -22,6 +22,7 @@ const agent_base_1 = require("agent-base");
 const tls_1 = __importDefault(require("tls"));
 var filepath = os_1.default.tmpdir();
 var prefix = 'node_ca_';
+var file_end = '--------------------http-cache-agent';
 function getKey(options) {
     // @ts-ignore
     let href = options.href || null;
@@ -110,9 +111,10 @@ function parseHead(head) {
     return res;
 }
 function createCache(socket, file) {
-    var cstream;
-    var head = Buffer.alloc(0);
-    var spos = -1;
+    let cache_fd;
+    let head = Buffer.alloc(0);
+    let spos = -1;
+    let tmp_file = path_1.default.normalize(path_1.default.dirname(file) + path_1.default.sep + '~' + path_1.default.basename(file));
     socket.on('data', function (data) {
         if (head !== null) {
             head = Buffer.concat([head, data], head.length + data.length);
@@ -123,27 +125,38 @@ function createCache(socket, file) {
                 if (HeadObj.expires) {
                     let expires = new Date(HeadObj.expires);
                     if ((new Date()).getTime() < expires.getTime()) {
-                        cstream = fs_1.default.createWriteStream(file);
+                        try {
+                            cache_fd = fs_1.default.openSync(tmp_file, 'w+');
+                        }
+                        catch (e) {
+                            socket.emit('http-cache-agent.error', e);
+                        }
                     }
                 }
-                if (cstream) {
-                    cstream.write(head);
-                    cstream.write(body);
+                if (cache_fd) {
+                    fs_1.default.writeSync(cache_fd, head);
+                    fs_1.default.writeSync(cache_fd, body);
                 }
                 head = null;
             }
         }
         else {
-            if (cstream)
-                cstream.write(data);
+            if (cache_fd)
+                fs_1.default.writeSync(cache_fd, data);
         }
     });
-    /*socket.on('error', function (err) {
-        console.error(err);
-    });*/
     socket.on('end', function () {
-        if (cstream)
-            cstream.close();
+        if (cache_fd) {
+            try {
+                fs_1.default.closeSync(cache_fd);
+                if (fs_1.default.existsSync(file))
+                    fs_1.default.unlinkSync(file);
+                fs_1.default.renameSync(tmp_file, file);
+            }
+            catch (e) {
+                socket.emit('http-cache-agent.error', e);
+            }
+        }
     });
 }
 function isCached(file) {
@@ -282,6 +295,9 @@ class ComlogCacheAgent extends agent_base_1.Agent {
                     .then(function (socket) {
                     if (!cached) {
                         cached = true;
+                        socket.on('http-cache-agent.error', function (e) {
+                            request.emit('http-cache-agent.error', e);
+                        });
                         createCache(socket, cacheFile);
                     }
                     if (!cb_send && cb) {
@@ -371,7 +387,17 @@ function getCacheFiles(opt, cb) {
     else
         pcheck = function () { return true; };
     var scheck = function (file) {
-        return file.indexOf('.cache') === file.length - 6;
+        let ext_ok = file.indexOf('.cache') === file.length - 6;
+        let prefix_ok = true;
+        if (prefix && prefix.length > 0) {
+            if (file.indexOf('~') === 0) {
+                prefix_ok = file.substring(0, prefix.length + 1) === '~' + prefix;
+            }
+            else {
+                prefix_ok = file.substring(0, prefix.length) === prefix;
+            }
+        }
+        return ext_ok && prefix_ok;
     };
     fs_1.default.readdir(opt.filepath, function (err, files) {
         if (err) {

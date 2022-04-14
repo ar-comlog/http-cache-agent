@@ -6,6 +6,12 @@ Compatible with http-proxy-agent, https-proxy-agent and proxy-agent.
 npm install --save http-cache-agent
 ```
 
+## Changelog
+2022-04-14
+- FIX BUG if the process exited before the cache file was written 
+- Change to Named pipe (no port using more)
+- Added 'http-cache-agent.error' event to socket and request
+
 ## Usage:
 ```javascript
 const CacheAgent = require('http-cache-agent');

@@ -1,5 +1,5 @@
 import _os from 'os';
-import _fs from 'fs';
+import _fs, {PathLike} from 'fs';
 import _path from 'path';
 import _crypto from 'crypto';
 import _net from 'net';
@@ -11,6 +11,7 @@ import tls from "tls";
 
 var filepath: string = _os.tmpdir();
 var prefix = 'node_ca_';
+var file_end = '--------------------http-cache-agent';
 
 export interface Header {
 	protocol?: string,
@@ -77,7 +78,7 @@ function getKey(options: RequestOptions) {
 	return md5sum.digest('hex');
 }
 
-function readCacheHeaderSync(file: string) {
+function readCacheHeaderSync(file: PathLike) {
 	let fd = _fs.openSync(file, 'r');
 	let data = Buffer.alloc(1024);
 	let offset = 0;
@@ -126,9 +127,10 @@ function parseHead(head: string) : Header {
 }
 
 function createCache(socket: _stream.Duplex, file: string) {
-	var cstream: _fs.WriteStream;
-	var head : Buffer|null = Buffer.alloc(0);
-	var spos = -1;
+	let cache_fd: number;
+	let head : Buffer|null = Buffer.alloc(0);
+	let spos = -1;
+	let tmp_file = _path.normalize(_path.dirname(file) + _path.sep + '~' + _path.basename(file));
 
 	socket.on('data', function (data) {
 		if (head !== null) {
@@ -141,27 +143,36 @@ function createCache(socket: _stream.Duplex, file: string) {
 				if (HeadObj.expires) {
 					let expires = new Date(HeadObj.expires);
 					if ((new Date()).getTime() < expires.getTime()) {
-						cstream = _fs.createWriteStream(file);
+						try {
+							cache_fd = _fs.openSync(tmp_file, 'w+');
+						}
+						catch (e) {
+							socket.emit('http-cache-agent.error', e);
+						}
 					}
 				}
 
-				if (cstream) {
-					cstream.write(head);
-					cstream.write(body);
+				if (cache_fd) {
+					_fs.writeSync(cache_fd, head);
+					_fs.writeSync(cache_fd, body);
 				}
 				head = null;
 			}
 		} else {
-			if (cstream) cstream.write(data);
+			if (cache_fd) _fs.writeSync(cache_fd, data);
 		}
 	});
 
-	/*socket.on('error', function (err) {
-		console.error(err);
-	});*/
-
 	socket.on('end', function () {
-		if (cstream) cstream.close();
+		if (cache_fd) {
+			try {
+				_fs.closeSync(cache_fd);
+				if (_fs.existsSync(file)) _fs.unlinkSync(file);
+				_fs.renameSync(tmp_file, file);
+			} catch (e) {
+				socket.emit('http-cache-agent.error', e);
+			}
+		}
 	});
 }
 
@@ -188,7 +199,7 @@ function isCached(file: string) {
  * @param {Function} cb
  * @return {module:net.Socket}
  */
-function CacheSocket(file: string, cb: (socket: _net.Socket) => void) : _net.Socket {
+function CacheSocket(file: string, cb: (socket: _net.Socket) => void) {
 	var stream = _fs.createReadStream(file);
 
 	var PIPE_NAME = Date.now().toString(36);
@@ -320,8 +331,12 @@ export class ComlogCacheAgent extends Agent {
 				.then(function (socket: _stream.Duplex) {
 					if (!cached) {
 						cached = true;
+						socket.on('http-cache-agent.error', function(e: Error) {
+							request.emit('http-cache-agent.error', e);
+						});
 						createCache(socket, cacheFile);
 					}
+
 					if (!cb_send && cb) {
 						cb(null, socket);
 						cb_send = true;
@@ -406,7 +421,17 @@ export function getCacheFiles (opt: any, cb?: Function) {
 	else pcheck = function () { return true; };
 
 	var scheck = function (file : string) {
-		return file.indexOf('.cache') === file.length-6;
+		let ext_ok = file.indexOf('.cache') === file.length-6;
+		let prefix_ok = true;
+		if (prefix && prefix.length > 0) {
+			if (file.indexOf('~') === 0) {
+				prefix_ok = file.substring(0, prefix.length+1) === '~'+prefix;
+			}
+			else {
+				prefix_ok = file.substring(0, prefix.length) === prefix;
+			}
+		}
+		return ext_ok && prefix_ok;
 	};
 
 	_fs.readdir(opt.filepath, function (err, files) {
