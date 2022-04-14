@@ -22,7 +22,6 @@ const agent_base_1 = require("agent-base");
 const tls_1 = __importDefault(require("tls"));
 var filepath = os_1.default.tmpdir();
 var prefix = 'node_ca_';
-var file_end = '--------------------http-cache-agent';
 function getKey(options) {
     // @ts-ignore
     let href = options.href || null;
@@ -111,7 +110,7 @@ function parseHead(head) {
     return res;
 }
 function createCache(socket, file) {
-    let cache_fd;
+    let cache_fd = null;
     let head = Buffer.alloc(0);
     let spos = -1;
     let tmp_file = path_1.default.normalize(path_1.default.dirname(file) + path_1.default.sep + '~' + path_1.default.basename(file));
@@ -145,7 +144,8 @@ function createCache(socket, file) {
                 fs_1.default.writeSync(cache_fd, data);
         }
     });
-    socket.on('end', function () {
+    let socket_error = null;
+    let close = function () {
         if (cache_fd) {
             try {
                 fs_1.default.closeSync(cache_fd);
@@ -156,8 +156,14 @@ function createCache(socket, file) {
             catch (e) {
                 socket.emit('http-cache-agent.error', e);
             }
+            cache_fd = null;
         }
+    };
+    socket.on('error', function (e) {
+        socket_error = e;
     });
+    socket.on('close', close);
+    socket.on('end', close);
 }
 function isCached(file) {
     try {
@@ -185,15 +191,18 @@ function CacheSocket(file, cb) {
     var stream = fs_1.default.createReadStream(file);
     var PIPE_NAME = Date.now().toString(36);
     var PIPE_PATH = "\\\\.\\pipe\\" + PIPE_NAME;
+    let piped = false;
     var srv = net_1.default.createServer(function (sock) {
         sock.on('data', function (chunk) {
-            stream.pipe(sock);
-            stream.on('end', function () {
-                sock.end();
-                srv.close();
-                if (stream)
-                    stream.close();
-            });
+            if (!piped) {
+                stream.pipe(sock);
+                stream.on('end', function () {
+                    sock.end();
+                    srv.close();
+                    if (stream)
+                        stream.close();
+                });
+            }
         });
     });
     var socket = new net_1.default.Socket();
@@ -281,6 +290,8 @@ class ComlogCacheAgent extends agent_base_1.Agent {
                     promise = new Promise(function (resolve) {
                         let socket;
                         if (options.secureEndpoint) {
+                            if (!options.servername)
+                                options.servername = options.host || options.hostname || '127.0.0.1';
                             socket = tls_1.default.connect(options);
                         }
                         else {

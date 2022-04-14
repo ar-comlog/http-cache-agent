@@ -1,4 +1,4 @@
-import _os from 'os';
+import _os, {constants} from 'os';
 import _fs, {PathLike} from 'fs';
 import _path from 'path';
 import _crypto from 'crypto';
@@ -126,7 +126,7 @@ function parseHead(head: string) : Header {
 }
 
 function createCache(socket: _stream.Duplex, file: string) {
-	let cache_fd: number;
+	let cache_fd: number|null = null;
 	let head : Buffer|null = Buffer.alloc(0);
 	let spos = -1;
 	let tmp_file = _path.normalize(_path.dirname(file) + _path.sep + '~' + _path.basename(file));
@@ -162,7 +162,9 @@ function createCache(socket: _stream.Duplex, file: string) {
 		}
 	});
 
-	socket.on('end', function () {
+	let socket_error = null;
+
+	let close = function () {
 		if (cache_fd) {
 			try {
 				_fs.closeSync(cache_fd);
@@ -171,8 +173,16 @@ function createCache(socket: _stream.Duplex, file: string) {
 			} catch (e) {
 				socket.emit('http-cache-agent.error', e);
 			}
+			cache_fd = null;
 		}
+	};
+
+	socket.on('error', function (e) {
+		socket_error = e;
 	});
+
+	socket.on('close', close);
+	socket.on('end', close);
 }
 
 function isCached(file: string) {
@@ -203,15 +213,18 @@ function CacheSocket(file: string, cb: (socket: _net.Socket) => void) {
 
 	var PIPE_NAME = Date.now().toString(36);
 	var PIPE_PATH = "\\\\.\\pipe\\" + PIPE_NAME;
+	let piped = false;
 
 	var srv = _net.createServer(function(sock) {
 		sock.on('data', function (chunk) {
-			stream.pipe(sock);
-			stream.on('end', function () {
-				sock.end();
-				srv.close();
-				if (stream) stream.close();
-			});
+			if (!piped) {
+				stream.pipe(sock);
+				stream.on('end', function () {
+					sock.end();
+					srv.close();
+					if (stream) stream.close();
+				});
+			}
 		});
 	});
 
@@ -315,6 +328,7 @@ export class ComlogCacheAgent extends Agent {
 				promise = new Promise(function (resolve) {
 					let socket: _net.Socket
 					if (options.secureEndpoint) {
+						if (!options.servername) options.servername = options.host || options.hostname || '127.0.0.1';
 						socket = tls.connect(options as tls.ConnectionOptions);
 					}
 					else {

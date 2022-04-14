@@ -8,6 +8,7 @@ npm install --save http-cache-agent
 
 ## Changelog
 2022-04-14
+- FIX BUG SSL Connections
 - FIX BUG if the process exited before the cache file was written 
 - Change to Named pipe (no port using more)
 - Added 'http-cache-agent.error' event to socket and request

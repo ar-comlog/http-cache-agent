@@ -114,33 +114,31 @@ CacheAgent.reset(function (err) {
 });
 /**/
 
-CacheAgent.clear(function () {
-	var ca = CacheAgent.auto();
-	var req = https.get(
-		'https://www.google.de/favicon.ico',
-		{agent: ca},
-		function(res) {
-			console.log('STATUS: ' + res.statusCode);
-			console.log('HEADERS: ' + JSON.stringify(res.headers));
+var ca = CacheAgent.auto();
+var req = https.get(
+	'https://www.google.de/favicon.ico',
+	{agent: ca},
+	function(res) {
+		console.log('STATUS: ' + res.statusCode);
+		console.log('HEADERS: ' + JSON.stringify(res.headers));
 
-			// Buffer the body entirely for processing as a whole.
-			var bodyChunks = [];
-			res.on('data', function(chunk) {
-				// You can process streamed parts here...
-				bodyChunks.push(chunk);
-			}).on('end', function() {
-				var body = Buffer.concat(bodyChunks);
-				console.log('BODY: ' + body);
-				// ...and/or process the entire body here.
-			})
-		}
-	);
+		// Buffer the body entirely for processing as a whole.
+		var bodyChunks = [];
+		res.on('data', function(chunk) {
+			// You can process streamed parts here...
+			bodyChunks.push(chunk);
+		}).on('end', function() {
+			var body = Buffer.concat(bodyChunks);
+			console.log('BODY: ' + body);
+			// ...and/or process the entire body here.
+		})
+	}
+);
 
-	req.on('error', function(e) {
-		console.log('ERROR: ' + e.message);
-	});
+req.on('error', function(e) {
+	console.log('ERROR: ' + e.message);
+});
 
-	req.end();
-})
+req.end();
 
 /**/
