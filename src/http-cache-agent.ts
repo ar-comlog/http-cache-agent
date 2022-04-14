@@ -11,7 +11,6 @@ import tls from "tls";
 
 var filepath: string = _os.tmpdir();
 var prefix = 'node_ca_';
-var file_end = '--------------------http-cache-agent';
 
 export interface Header {
 	protocol?: string,
