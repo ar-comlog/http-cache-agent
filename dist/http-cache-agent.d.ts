@@ -1,7 +1,4 @@
 /// <reference types="node" />
-/// <reference types="node" />
-/// <reference types="node" />
-/// <reference types="node" />
 import _net from 'net';
 import _http from "http";
 import _https from "https";
@@ -55,7 +52,7 @@ export declare class HTTPSCacheAgent extends ComlogCacheAgent {
  * @param {module:http.Agent} [agent]
  * @return {Agent}
  */
-export declare function http(opt?: CAOptions | null, agent?: _http.Agent | Agent): HTTPCacheAgent;
+export declare function http(opt?: CAOptions, agent?: _http.Agent | Agent): HTTPCacheAgent;
 /**
  * Create HTTPS Agent
  * @param {{}} [opt]
