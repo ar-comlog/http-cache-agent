@@ -247,7 +247,7 @@ export class ComlogCacheAgent extends Agent {
 
 	public secureEndpoint = false;
 
-	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent) {
+	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent|null) {
 		super(opt);
 		this.agent = agent ? agent : (opt && opt.agent ? opt.agent : undefined);
 		if (opt) {
@@ -368,7 +368,7 @@ export class ComlogCacheAgent extends Agent {
 }
 
 export class HTTPCacheAgent extends ComlogCacheAgent {
-	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent) {
+	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent|null) {
 		if (!opt) opt = {} as CAOptions;
 		opt.secureEndpoint = false;
 		super(opt, agent);
@@ -376,7 +376,7 @@ export class HTTPCacheAgent extends ComlogCacheAgent {
 }
 
 export class HTTPSCacheAgent extends ComlogCacheAgent {
-	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent) {
+	constructor(opt?: CAOptions, agent?: _http.Agent|_https.Agent|Agent|null) {
 		if (!opt) opt = {} as CAOptions;
 		opt.secureEndpoint = true;
 		super(opt, agent);
@@ -400,7 +400,7 @@ function _opt (opt: any) {
  * @param {module:http.Agent} [agent]
  * @return {Agent}
  */
-export function http (opt?: CAOptions, agent?: _http.Agent | Agent) {
+export function http (opt?: CAOptions, agent?: _http.Agent | Agent | null) {
 	opt = _opt(opt);
 	return new HTTPCacheAgent(opt, agent);
 }
@@ -411,7 +411,7 @@ export function http (opt?: CAOptions, agent?: _http.Agent | Agent) {
  * @param {module:http.Agent} [agent]
  * @return {Agent}
  */
-export function https (opt?: CAOptions, agent?: _https.Agent | Agent) {
+export function https (opt?: CAOptions, agent?: _https.Agent | Agent | null) {
 	opt = _opt(opt);
 	return new HTTPSCacheAgent(opt, agent);
 }
