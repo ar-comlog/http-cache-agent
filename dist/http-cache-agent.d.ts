@@ -26,7 +26,7 @@ export declare class ComlogCacheAgent extends Agent {
     prefix: string;
     cache: CAOptions;
     secureEndpoint: boolean;
-    constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent);
+    constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent | null);
     /**
      * Generate cache File path for Request
      * @param {RequestOptions} options
@@ -41,10 +41,10 @@ export declare class ComlogCacheAgent extends Agent {
     callback(request: CAClientRequest, options: RequestOptions, cb?: Function): Promise<_net.Socket>;
 }
 export declare class HTTPCacheAgent extends ComlogCacheAgent {
-    constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent);
+    constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent | null);
 }
 export declare class HTTPSCacheAgent extends ComlogCacheAgent {
-    constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent);
+    constructor(opt?: CAOptions, agent?: _http.Agent | _https.Agent | Agent | null);
 }
 /**
  * Create HTTP Agent
@@ -52,14 +52,14 @@ export declare class HTTPSCacheAgent extends ComlogCacheAgent {
  * @param {module:http.Agent} [agent]
  * @return {Agent}
  */
-export declare function http(opt?: CAOptions, agent?: _http.Agent | Agent): HTTPCacheAgent;
+export declare function http(opt?: CAOptions, agent?: _http.Agent | Agent | null): HTTPCacheAgent;
 /**
  * Create HTTPS Agent
  * @param {{}} [opt]
  * @param {module:http.Agent} [agent]
  * @return {Agent}
  */
-export declare function https(opt?: CAOptions, agent?: _https.Agent | Agent): HTTPSCacheAgent;
+export declare function https(opt?: CAOptions, agent?: _https.Agent | Agent | null): HTTPSCacheAgent;
 /**
  * Create HTTP or HTTPS Cache agent. Autodetect!
  * @param {{}} [opt]
