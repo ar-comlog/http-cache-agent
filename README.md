@@ -13,7 +13,7 @@ npm install --save http-cache-agent
 - Change to Named pipe (no port using more)
 - Added 'http-cache-agent.error' event to socket and request
 
-## Usage:
+## Usage JavaScript:
 ```javascript
 const CacheAgent = require('http-cache-agent');
 const https = require('https');
@@ -21,6 +21,16 @@ const https = require('https');
 // Change path (default is temp)
 CacheAgent.filepath = '/usr/local/tmp';
 ```
+
+## Usage TypeScript:
+```typescript
+import * as CacheAgent from 'http-cache-agent';
+import https from "https";
+
+// Change path (default is temp)
+CacheAgent.filepath = '/usr/local/tmp';
+```
+
 
 #### Get content
 ```javascript
